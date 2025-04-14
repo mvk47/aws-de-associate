@@ -64,149 +64,73 @@
 
   <script>
     const studyPlan = [
-      {
-        day: 'Day 1',
-        topics: [
-          'DEA-C01 exam structure and objectives',
-          'Study plan setup and resource collection'
-        ]
-      },
-      {
-        day: 'Day 2',
-        topics: [
-          'Amazon Kinesis (Data Streams, Firehose)',
-          'AWS Glue for ingestion',
-          'AWS Database Migration Service (DMS)'
-        ]
-      },
-      {
-        day: 'Day 3',
-        topics: [
-          'Amazon S3 and lifecycle policies',
-          'Amazon Redshift',
-          'DynamoDB and RDS basics',
-          'AWS Lake Formation'
-        ]
-      },
-      {
-        day: 'Day 4',
-        topics: [
-          'AWS Glue (Crawlers, Jobs)',
-          'AWS Lambda',
-          'Amazon EMR basics'
-        ]
-      },
-      {
-        day: 'Day 5',
-        topics: [
-          'AWS Step Functions',
-          'Managed Workflows for Apache Airflow (MWAA)'
-        ]
-      },
-      {
-        day: 'Day 6',
-        topics: [
-          'IAM roles and policies',
-          'Encryption: SSE, KMS',
-          'Lake Formation permissions'
-        ]
-      },
-      {
-        day: 'Day 7',
-        topics: [
-          'Recap of all topics from Week 1',
-          'Practice questions'
-        ]
-      },
-      {
-        day: 'Day 8',
-        topics: [
-          'Amazon Athena',
-          'Redshift Spectrum',
-          'Amazon QuickSight'
-        ]
-      },
-      {
-        day: 'Day 9',
-        topics: [
-          'Data modeling: Star/Snowflake schema',
-          'Table partitioning in Redshift and S3'
-        ]
-      },
-      {
-        day: 'Day 10',
-        topics: [
-          'CloudWatch and CloudTrail for monitoring',
-          'AWS Cost Explorer and Trusted Advisor'
-        ]
-      },
-      {
-        day: 'Day 11',
-        topics: [
-          'Event-driven pipeline design',
-          'Hybrid and multi-region architectures'
-        ]
-      },
-      {
-        day: 'Day 12',
-        topics: [
-          'Well-Architected Big Data & Analytics Lens',
-          'Data lake architecture patterns'
-        ]
-      },
-      {
-        day: 'Day 13',
-        topics: [
-          'Take full-length practice test',
-          'Review wrong answers and explanations'
-        ]
-      },
-      {
-        day: 'Day 14',
-        topics: [
-          'Take second mock test',
-          'Revisit concepts from incorrect answers'
-        ]
-      },
-      {
-        day: 'Day 15',
-        topics: [
-          'Light review of notes and service summaries',
-          'Relax and prepare mentally for the exam'
-        ]
-      }
+      { day: 'Day 1', topics: [ 'DEA-C01 exam structure and objectives', 'Study plan setup and resource collection' ] },
+      { day: 'Day 2', topics: [ 'Amazon Kinesis (Data Streams, Firehose)', 'AWS Glue for ingestion', 'AWS Database Migration Service (DMS)' ] },
+      { day: 'Day 3', topics: [ 'Amazon S3 and lifecycle policies', 'Amazon Redshift', 'DynamoDB and RDS basics', 'AWS Lake Formation' ] },
+      { day: 'Day 4', topics: [ 'AWS Glue (Crawlers, Jobs)', 'AWS Lambda', 'Amazon EMR basics' ] },
+      { day: 'Day 5', topics: [ 'AWS Step Functions', 'Managed Workflows for Apache Airflow (MWAA)' ] },
+      { day: 'Day 6', topics: [ 'IAM roles and policies', 'Encryption: SSE, KMS', 'Lake Formation permissions' ] },
+      { day: 'Day 7', topics: [ 'Recap of all topics from Week 1', 'Practice questions' ] },
+      { day: 'Day 8', topics: [ 'Amazon Athena', 'Redshift Spectrum', 'Amazon QuickSight' ] },
+      { day: 'Day 9', topics: [ 'Data modeling: Star/Snowflake schema', 'Table partitioning in Redshift and S3' ] },
+      { day: 'Day 10', topics: [ 'CloudWatch and CloudTrail for monitoring', 'AWS Cost Explorer and Trusted Advisor' ] },
+      { day: 'Day 11', topics: [ 'Event-driven pipeline design', 'Hybrid and multi-region architectures' ] },
+      { day: 'Day 12', topics: [ 'Well-Architected Big Data & Analytics Lens', 'Data lake architecture patterns' ] },
+      { day: 'Day 13', topics: [ 'Take full-length practice test', 'Review wrong answers and explanations' ] },
+      { day: 'Day 14', topics: [ 'Take second mock test', 'Revisit concepts from incorrect answers' ] },
+      { day: 'Day 15', topics: [ 'Light review of notes and service summaries', 'Relax and prepare mentally for the exam' ] }
     ];
 
     const container = document.getElementById('days');
     let totalTopics = 0, completed = 0;
+    let savedProgress = JSON.parse(localStorage.getItem('deaProgress') || '{}');
 
-    studyPlan.forEach(({ day, topics }) => {
+    studyPlan.forEach(({ day, topics }, dayIndex) => {
       const div = document.createElement('div');
       div.className = 'day';
       div.innerHTML = `<h3>${day}</h3>`;
       const list = document.createElement('div');
       list.className = 'topics';
 
-      topics.forEach(topic => {
+      topics.forEach((topic, topicIndex) => {
         totalTopics++;
+        const topicId = `d${dayIndex}-t${topicIndex}`;
+        const checked = savedProgress[topicId];
+
         const topicDiv = document.createElement('div');
         topicDiv.className = 'topic';
         topicDiv.innerHTML = `
-          <input type="checkbox" onchange="toggleProgress(this)">
-          <label>${topic}</label>
+          <input type="checkbox" id="${topicId}" ${checked ? 'checked' : ''} onchange="toggleProgress(this, '${topicId}')">
+          <label class="${checked ? 'done' : ''}" for="${topicId}">${topic}</label>
         `;
         list.appendChild(topicDiv);
+
+        if (checked) completed++;
       });
 
       div.appendChild(list);
       container.appendChild(div);
     });
 
-    window.toggleProgress = function (checkbox) {
-      if (checkbox.checked) completed++;
-      else completed--;
+    function updateProgressBar() {
       document.getElementById('progressBar').style.width = (completed / totalTopics) * 100 + '%';
-      checkbox.nextElementSibling.classList.toggle('done', checkbox.checked);
+    }
+
+    updateProgressBar();
+
+    window.toggleProgress = function (checkbox, id) {
+      const label = checkbox.nextElementSibling;
+      if (checkbox.checked) {
+        completed++;
+        label.classList.add('done');
+        savedProgress[id] = true;
+      } else {
+        completed--;
+        label.classList.remove('done');
+        delete savedProgress[id];
+      }
+      localStorage.setItem('deaProgress', JSON.stringify(savedProgress));
+      updateProgressBar();
     };
   </script>
 </body>
